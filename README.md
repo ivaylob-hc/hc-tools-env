@@ -20,10 +20,10 @@ Usage:
     hc-tools-env <use|install|use|versions> <terraform|packer|vault|nomad|consul> <remote [number]>
 
 Examples:
-    hc-tools-env use terraform-<version>, where <version> looks like terraform-0.12.29
+    hc-tools-env use terraform-<version>
     hc-tools-env install terraform-<version>
     hc-tools-env list terraform
-    hc-tools-env list terraform remote <number>, where <number> in of versions to be listed (default is 20)
+    hc-tools-env list terraform remote <number>
     hc-tools-env version
 ```
 
@@ -104,6 +104,8 @@ $ hc-tools-env list terraform remote
 0.12.17
 0.12.16
 ```
+
+> Default number of returned versions is 20 latest versions but it change be specified as fourth argument.
 
 * list given _number_ of _remote_ versions of the specified tool
 
