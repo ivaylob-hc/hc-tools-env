@@ -32,7 +32,7 @@ Examples:
 
 The _use_ action change deefault version of the specified tool to the specified version.
 
-```commandline
+```sh
 $ hc-tools-env use terraform-0.13.3
 Unavailable version terraform of 0.13.3
 Downloading https://releases.hashicorp.com/terraform/0.13.3/terraform_0.13.3_darwin_amd64.zip
@@ -42,7 +42,7 @@ Terraform v0.13.3
 
 > You'll get a message if the desired version is not available locally.
 
-```commandline
+```sh
 $ hc-tools-env use terraform-0.12.26
 Terraform v0.12.26
 ```
@@ -52,7 +52,7 @@ Terraform v0.12.26
 
 The _install_ action downloads the desired version of the tool and set this version as default.
 
-```commandline
+```sh
 $ hc-tools-env install terraform-0.13.5
 Downloading https://releases.hashicorp.com/terraform/0.13.5/terraform_0.13.5_darwin_amd64.zip
 Using terraform-0.13.5
@@ -64,7 +64,7 @@ Terraform v0.13.5
 
 * list _local_ versions of the specified tool
 
-```commandline
+```sh
 $ hc-tools-env list terraform
 0.12.26
 0.12.24
@@ -81,7 +81,7 @@ $ hc-tools-env list terraform
 
 * list _remote_ versions of the specified tool
 
-```commandline
+```sh
 $ hc-tools-env list terraform remote
 0.13.5
 0.13.4
@@ -109,7 +109,7 @@ $ hc-tools-env list terraform remote
 
 * list given _number_ of _remote_ versions of the specified tool
 
-```commandline
+```sh
 $ hc-tools-env list terraform remote 7
 0.13.5
 0.13.4
@@ -125,7 +125,7 @@ $ hc-tools-env list terraform remote 7
 
  The _version_ action displays the current versions of all locally installed tools.
 
-```commandline
+```sh
 $ hc-tools-env version
 hc-tools-env    1.0.0
 consul          1.5.2
