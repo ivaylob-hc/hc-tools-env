@@ -10,13 +10,16 @@
 # ---------------------------
 # Settings
 
-VERSION="1.0.0"
+VERSION="0.1.0"
+SCRIPT_NAME=$(basename $0)
+
 BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 TMP_DIR=${TMP_DIR:-/tmp}
+
 HC_BASE_URL="https://releases.hashicorp.com"
 SUPPORTED_TOOLS="terraform|packer|vault|nomad|consul"
-OS_NAME=$(uname -s | awk '{print tolower($0)}')
 
+OS_NAME=$(uname -s | awk '{print tolower($0)}')
 
 # Display errors in console
 if [[ ${1} == '-e' ]] ; then
@@ -30,18 +33,18 @@ fi
 # Functions
 
 help() {
-	echo '
+	echo "
 Usage:
-	hc-tools-env <action> <tool> <params>
-	hc-tools-env <use|install|use|versions> <terraform|packer|vault|nomad|consul> <remote [number]>
+	${SCRIPT_NAME} <action> <tool> <params>
+	${SCRIPT_NAME} <use|install|use|versions> <${SUPPORTED_TOOLS}> <remote [number]>
 
 Examples:
-	hc-tools-env use terraform-<version>
-	hc-tools-env install terraform-<version>
-	hc-tools-env list terraform
-	hc-tools-env list terraform remote <number>
-	hc-tools-env version
-	'
+	${SCRIPT_NAME} use terraform-<version>
+	${SCRIPT_NAME} install terraform-<version>
+	${SCRIPT_NAME} list terraform
+	${SCRIPT_NAME} list terraform remote <number>
+	${SCRIPT_NAME} version
+	"
 }
 
 # Create binary location directory if not exist
@@ -53,17 +56,11 @@ set_local_bin() {
 	echo "Please add ${BIN_DIR} to the PATH"
 }
 
-get_platform() {
+get_arch_name() {
 	case $(uname -m) in
-	  x86_64)
-	    PLATFORM='amd64' ;;
-	  x86_32)
-	    PLATFORM='386'   ;;
-	  arm*)
-	    PLATFORM='arm'   ;;
-	  *)
-		echo "Unsupported platform"
-		exit 1
+	  x86_64) ARCH_NAME='amd64' ;;
+	  x86_32) ARCH_NAME='386'   ;;
+	       *) ARCH_NAME=$(uname -m | awk '{print tolower($0)}')  ;;
 	esac
 }
 
@@ -73,6 +70,7 @@ use() {
 		cd ${BIN_DIR}
 		ln -sf ${1} ${1%-*}
 		# display current version after set
+		echo -n "Using "
 		${BIN_DIR}/${1%-*} 'version'
 	else
 		echo "Unavailable local version ${1%-*} of ${1#*-}"
@@ -81,19 +79,29 @@ use() {
 }
 
 install() {
+	# Validate input arguments
+	[[ ${1##*-} =~ ^[0-9] ]] || eval 'echo "Missing tool version: ${1}"; exit 1'
+
 	# check whether the tool is supported tools
 	if [[ $(echo ${1} | egrep -c ${SUPPORTED_TOOLS}) -gt 0 ]] ; then
-		URL="${HC_BASE_URL}/${1%-*}/${1#*-}/${1/-/_}_${OS_NAME}_${PLATFORM}.zip"
+		ZIPFILE="${1/-/_}_${OS_NAME}_${ARCH_NAME}.zip"
+
+		URL="${HC_BASE_URL}/${1%-*}/${1#*-}/${ZIPFILE}"
 		echo "Downloading ${URL}"
 
 		# download and unzip tool in temporary folder
-		\curl ${URL} | bsdtar -xf- -C ${TMP_DIR} || eval 'echo "Failed to download ${URL}"; exit 1'
+		# \curl ${URL} | bsdtar -xf- -C ${TMP_DIR} || eval 'echo "Failed to download ${URL}"; exit 1'
+		cd ${TMP_DIR} || eval 'echo "[error]: Temporary folder ${TMP_DIR} is not accessible."'
+		\curl -O ${URL}
+		unzip "${ZIPFILE}"
+		# cleanup
+		rm -f "${ZIPFILE}"
+
 		# unzipped tool is without version. move the tool in bin folder and append version in the name
-		mv ${TMP_DIR}/${1%-*} ${BIN_DIR}/${1}
+		mv ${1%-*} ${BIN_DIR}/${1}
 		chmod +x ${BIN_DIR}/${1}
 
 		# Set downloaded version as default
-		echo "Using ${1}"
 		use ${1}
 	else
 		echo "Error: Unsupported tool"
@@ -121,7 +129,7 @@ version() {
 	printf "%s\n" "${VERSION}"
 
 	# display current default versions of locally installed tools
-	ls -l ${BIN_DIR} | grep '^l' | egrep "terraform|packer|vault|nomad|consul" | awk -F'->' '{print $2}' | while read tool
+	ls -l ${BIN_DIR} | grep '^l' | egrep "${SUPPORTED_TOOLS}" | awk -F'->' '{print $2}' | while read tool
 	do
 		printf "%-16s" "${tool%-*}"
 		printf "%s\n" "${tool#*-}"
@@ -129,20 +137,10 @@ version() {
 }
 
 # ---------------------------
+#   SCRIPT STARTS FROM HERE
+# ---------------------------
 # Main
-case $(uname -m) in
-  x86_64)
-    PLATFORM='amd64' ;;
-  x86_32)
-    PLATFORM='386'   ;;
-  arm*)
-    PLATFORM='arm'   ;;
-  *)
-	echo "Unsupported platform"
-	exit 1
-esac
-
+get_arch_name
 set_local_bin
 
 eval $@ ${SUPPRESS_ERRORS} || help
-
